@@ -30,6 +30,8 @@ proc `=destroy`*[T](x: var Buffer[T]) =
       echo "buffer: Free: ", repr x.buf.pointer, " ", x.cnt[]
       deallocShared(x.buf)
       deallocShared(x.cnt)
+    else:
+      echo "buffer: decr: ", repr x.buf.pointer, " ", x.cnt[]
 
 proc `=copy`*[T](a: var Buffer[T]; b: Buffer[T]) =
   # do nothing for self-assignments:
@@ -68,12 +70,13 @@ proc thread1(val: int) {.thread.} =
       var myBytes = newBuffer(@"hello")
       myBytes2 = myBytes
 
-      echo "thread1: sending: ", repr myBytes
+      echo "thread1: sending: ", myBytes
       echo "mybytes2: ", myBytes2
 
       shareVal = myBytes
       echo "thread1: sent, left over: ", $myBytes
       signal(event.cond)
+      os.sleep(100)
 
 proc thread2(val: int) {.thread.} =
   echo "thread2"
@@ -83,6 +86,7 @@ proc thread2(val: int) {.thread.} =
       echo "thread2: receiving "
       let msg: Buffer[char] = shareVal
       echo "thread2: received: ", msg
+      # os.sleep(100)
 
 proc main() =
   echo "running"

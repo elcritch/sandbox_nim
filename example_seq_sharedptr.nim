@@ -24,7 +24,7 @@ proc thread1(val: int) {.thread.} =
       echo "thread1: sent over: ", myBytes
       echo "thread1: sent, left over: ", repr shareVal
       signal(event.cond)
-      os.sleep(1000)
+      # os.sleep(100)
 
 proc thread2(val: int) {.thread.} =
   echo "thread2"
@@ -33,7 +33,8 @@ proc thread2(val: int) {.thread.} =
       wait(event.cond, event.lock)
       echo "thread2: receiving "
       let msg = shareVal
-      echo "thread2: received: ", repr msg
+      echo "thread2: received: ", msg
+      os.sleep(100)
 
 proc main() =
   echo "running"
