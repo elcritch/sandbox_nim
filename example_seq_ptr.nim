@@ -24,12 +24,12 @@ proc `$`*[T](data: Buffer[T]): string =
 
 proc `=destroy`*[T](x: var Buffer[T]) =
   if x.buf != nil and x.cnt != nil:
-    let res = atomicLoad(x.cnt, 1, ATOMIC_ACQUIRE)
+    let res = atomicSubFetch(x.cnt, 1, ATOMIC_ACQUIRE)
     if res == 0:
       # for i in 0..<x.len: `=destroy`(x.data[i])
       echo "buffer: Free: ", repr x.buf.pointer, " ", x.cnt[]
-      dealloc(x.buf)
-      dealloc(x.cnt)
+      deallocShared(x.buf)
+      deallocShared(x.cnt)
 
 proc `=copy`*[T](a: var Buffer[T]; b: Buffer[T]) =
   # do nothing for self-assignments:
@@ -50,6 +50,7 @@ proc newBuffer*[T](data: openArray[T]): Buffer[T] =
   echo "ALLOCATE!"
   result.cnt = cast[ptr int](allocShared0(sizeof(result.cnt)))
   result.buf = cast[typeof result.buf](allocShared0(data.len))
+  result.cnt[] = 1
   result.size = data.len
   copyMem(result.buf, unsafeAddr data[0], data.len)
 
@@ -62,11 +63,14 @@ proc thread1(val: int) {.thread.} =
   echo "thread1"
   {.cast(gcsafe).}:
     os.sleep(100)
+    var myBytes2: Buffer[char]
     withLock(event.lock):
       var myBytes = newBuffer(@"hello")
-      echo "thread1: sending: ", repr myBytes
+      myBytes2 = myBytes
 
-      myBytes.incr()
+      echo "thread1: sending: ", repr myBytes
+      echo "mybytes2: ", myBytes2
+
       shareVal = myBytes
       echo "thread1: sent, left over: ", $myBytes
       signal(event.cond)
