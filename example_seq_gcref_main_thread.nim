@@ -70,8 +70,9 @@ proc thread2(val: int) {.thread.} =
 
     signal(event)
     wait(eventAfterGcFree)
-    echo "thread2: clear local ref"
+    echo "thread2: clear local ref: "
     msg = nil
+    assert getFreedValue(shareDataIsFreed) == 0, "msg should not be freed by now"
     signal(eventAfterThread2Done)
     echo "thread2: done"
 
