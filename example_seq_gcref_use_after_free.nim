@@ -11,7 +11,7 @@ type
     data: int
 
 var
-  # create a channel to send/recv strings
+  shareDataIsFreed: AtomicFreed
   shareData: ref Buffer
   event: Event
   eventAfterGcFree: Event
@@ -28,10 +28,13 @@ proc thread1(val: int) {.thread.} =
     myBytes.new:
       proc (x: ref Buffer) =
         echo "thread1: FREEING: ", cast[pointer](x).repr
+        discard shareDataIsFreed.incrFreedValue()
     myBytes.data = 10
+
     shareData = myBytes
     echo "thread1: sent, left over: ", repr myBytes
     signal(event)
+
     wait(event)
     myBytes = nil
     echo "thread1: finishing: ", cast[pointer](myBytes).repr
@@ -54,6 +57,7 @@ proc thread2(val: int) {.thread.} =
     signal(event)
     wait(eventAfterGcFree)
     echo "thread2: wait check: ", repr msg
+    assert getFreedValue(shareDataIsFreed) == 0, "msg should not be freed by now"
     echo "thread2: done: "
 
 proc main() =
@@ -61,6 +65,7 @@ proc main() =
 
   event = initEvent()
   eventAfterGcFree = initEvent()
+  shareDataIsFreed = newFreedValue()
   createThread(threads[0], thread1, 0)
   createThread(threads[1], thread2, 1)
 

@@ -33,10 +33,12 @@ proc thread1(val: int) {.thread.} =
         echo "thread1: FREEING: ", cast[pointer](x).repr
         discard shareDataIsFreed.incrFreedValue()
     myBytes.data = 10
+
     GC_ref(myBytes)
     shareData = myBytes
     echo "thread1: sent, left over: ", repr myBytes
     signal(event)
+
     wait(event)
     myBytes = nil
     echo "thread1: post send: ", cast[pointer](myBytes).repr
