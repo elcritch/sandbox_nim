@@ -1,6 +1,6 @@
 
 import std/os
-import std/locks
+import events
 
 type
   Event* = tuple[cond: Cond, lock: Lock]
