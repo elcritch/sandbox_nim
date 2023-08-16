@@ -27,7 +27,7 @@ proc thread1(val: int) {.thread.} =
     var myBytes: ref Buffer
     myBytes.new:
       proc (x: ref Buffer) =
-        echo "thread1: Freeing: ", cast[pointer](x).repr
+        echo "thread1: FREEING: ", cast[pointer](x).repr
     myBytes.data = 10
     # GC_ref(myBytes)
     # GC_unref(myBytes)
@@ -36,7 +36,7 @@ proc thread1(val: int) {.thread.} =
     signal(event)
     wait(event)
     myBytes = nil
-    echo "thread1: finishing: ", cast[pointer](myBytes).repr
+    echo "thread1: post send: ", cast[pointer](myBytes).repr
 
     GC_fullCollect()
     signal(eventAfterGcFree)
@@ -49,12 +49,12 @@ proc thread2(val: int) {.thread.} =
     
     echo "thread2: receiving ", cast[pointer](shareSeq).repr
     var msg = move shareSeq
-    # GC_ref(msg)
+    GC_ref(msg)
     echo "thread2: received: ", repr msg
 
     echo "thread2: deref: "
     # msg = nil
-    # GC_unref(msg)
+    GC_unref(msg)
 
     signal(event)
     wait(eventAfterGcFree)

@@ -15,20 +15,18 @@ proc thread1(val: int) {.thread.} =
   echo "thread1: sending"
   {.cast(gcsafe).}:
     os.sleep(100)
-    withLock(event.lock):
-      var myBytes = "Hello"
-      shareSeq = move myBytes
-      echo "thread1: sent, left over: ", myBytes
-      signal(event.cond)
+    var myBytes = "Hello"
+    shareSeq = move myBytes
+    echo "thread1: sent, left over: ", myBytes
+    signal(event)
 
 proc thread2(val: int) {.thread.} =
   echo "thread2: wait"
   {.cast(gcsafe).}:
-    withLock(event.lock):
-      wait(event.cond, event.lock)
-      echo "thread2: receiving "
-      let msg = shareSeq
-      echo "thread2: received: " & msg
+    wait(event)
+    echo "thread2: receiving "
+    let msg = shareSeq
+    echo "thread2: received: " & msg
 
 proc main() =
   echo "running"
