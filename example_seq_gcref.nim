@@ -11,6 +11,13 @@ type
   Buffer = object
     data: int
 
+  TestScenario* = enum
+    GCRefThread1
+    GCRefThread2
+
+var
+  scenario = GCRefThread1
+
 var
   # create a channel to send/recv strings
   shareSeq: ref Buffer
@@ -30,8 +37,8 @@ proc thread1(val: int) {.thread.} =
       proc (x: ref Buffer) =
         echo "thread1: FREEING: ", cast[pointer](x).repr
     myBytes.data = 10
-    # GC_ref(myBytes)
-    # GC_unref(myBytes)
+    if scenario == GCRefThread1:
+      GC_ref(myBytes)
     shareSeq = myBytes
     echo "thread1: sent, left over: ", repr myBytes
     signal(event)
@@ -50,7 +57,8 @@ proc thread2(val: int) {.thread.} =
     
     echo "thread2: receiving ", cast[pointer](shareSeq).repr
     var msg = move shareSeq
-    GC_ref(msg)
+    if scenario == GCRefThread2:
+      GC_ref(msg)
     echo "thread2: received: ", repr msg
 
     echo "thread2: deref: "
