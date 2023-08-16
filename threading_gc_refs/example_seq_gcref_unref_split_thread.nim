@@ -73,7 +73,6 @@ proc thread2(val: int) {.thread.} =
 
     GC_unref(shareData)
     shareData = nil
-
     msg = nil
     signal(eventAfterGcFree)
     echo "thread2: done"
