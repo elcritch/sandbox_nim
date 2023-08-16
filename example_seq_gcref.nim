@@ -1,6 +1,7 @@
 
 import std/os
 import std/locks
+import std/atomics
 
 import events
 

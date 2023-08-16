@@ -6,13 +6,14 @@ import std/atomics
 import events
 
 type
-  Buffer*[T: object] = object
+  Buffer*[T: SomeInteger | char] = object
     cnt: ptr int
     buf: ptr UncheckedArray[T]
     size: int
 
 var threads: array[2,Thread[int]]
 
+#[
 proc doTaskPool()
   doCompute(blkPtr[]) # --> thread b
 
@@ -24,6 +25,7 @@ proc handleRequest*() {.async.} =
   await sendTaskPool(blkPtr)
 
   return success Ok
+]#
 
 proc `$`*[T](data: Buffer[T]): string =
   if data.buf.isNil:
@@ -48,7 +50,7 @@ proc `=destroy`*[T](x: var Buffer[T]) =
 proc `=copy`*[T](a: var Buffer[T]; b: Buffer[T]) =
   # do nothing for self-assignments:
   if a.buf == b.buf: return
-  # `=destroy`(a)
+  `=destroy`(a)
   discard atomicAddFetch(b.cnt, 1, ATOMIC_RELAXED)
   a.size = b.size
   a.buf = b.buf
@@ -78,27 +80,25 @@ proc thread1(val: int) {.thread.} =
   {.cast(gcsafe).}:
     os.sleep(100)
     var myBytes2: Buffer[char]
-    withLock(event.lock):
-      var myBytes = newBuffer(@"hello")
-      myBytes2 = myBytes
+    var myBytes = newBuffer(@"hello")
+    myBytes2 = myBytes
 
-      echo "thread1: sending: ", myBytes
-      echo "mybytes2: ", myBytes2
+    echo "thread1: sending: ", myBytes
+    echo "mybytes2: ", myBytes2
 
-      shareVal = myBytes
-      echo "thread1: sent, left over: ", $myBytes
-      signal(event.cond)
-      os.sleep(100)
+    shareVal = myBytes
+    echo "thread1: sent, left over: ", $myBytes
+    signal(event)
+    os.sleep(100)
 
 proc thread2(val: int) {.thread.} =
   echo "thread2"
   {.cast(gcsafe).}:
-    withLock(event.lock):
-      wait(event.cond, event.lock)
-      echo "thread2: receiving "
-      let msg: Buffer[char] = shareVal
-      echo "thread2: received: ", msg
-      # os.sleep(100)
+    wait(event)
+    echo "thread2: receiving "
+    let msg: Buffer[char] = shareVal
+    echo "thread2: received: ", msg
+    # os.sleep(100)
 
 proc main() =
   echo "running"
