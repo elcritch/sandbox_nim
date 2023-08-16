@@ -5,21 +5,6 @@ import std/locks
 type
   Event* = tuple[cond: Cond, lock: Lock]
 
-proc initEvent*(): Event =
-  result.lock.initLock()
-  result.cond.initCond()
-
-template signal*(evt: var Event) =
-  withLock(evt.lock):
-    signal(evt.cond)
-
-template wait*(evt: var Event) =
-  withLock(evt.lock):
-    wait(evt.cond, evt.lock)
-
-when defined(gcArc) or defined(gcOrc):
-  {.error: "this example only blows up with refc".}
-
 var threads: array[2,Thread[int]]
 
 type
