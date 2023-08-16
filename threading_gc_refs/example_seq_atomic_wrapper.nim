@@ -41,7 +41,7 @@ proc `=destroy`*[T](x: var Buffer[T]) =
     let res = atomicSubFetch(x.cnt, 1, ATOMIC_ACQUIRE)
     if res == 0:
       # for i in 0..<x.len: `=destroy`(x.data[i])
-      echo "buffer: Free: ", repr x.buf.pointer, " ", x.cnt[]
+      echo "buffer: FREE: ", repr x.buf.pointer, " ", x.cnt[]
       deallocShared(x.buf)
       deallocShared(x.cnt)
     else:

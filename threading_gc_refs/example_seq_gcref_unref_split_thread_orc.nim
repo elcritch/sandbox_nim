@@ -32,8 +32,8 @@ proc thread1(val: int) {.thread.} =
     myBytes.new()
     myBytes.data = 10
 
-    shareData = myBytes
-    GC_ref(shareData)
+    shareData = move myBytes
+    # GC_ref(shareData)
     echo "thread1: sent, left over: ", repr myBytes
     signal(event)
 
@@ -69,7 +69,7 @@ proc thread2(val: int) {.thread.} =
     echo "thread2: after gc_collect: ", repr msg
     assert getFreedValue(shareDataIsFreed) == 0
 
-    GC_unref(shareData)
+    # GC_unref(shareData)
     shareData = nil
     msg = nil
     signal(eventAfterGcFree)
