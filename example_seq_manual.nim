@@ -4,6 +4,9 @@ import std/locks
 
 import events
 
+when defined(gcArc) or defined(gcOrc):
+  {.error: "this example only blows up with refc".}
+
 var threads: array[2,Thread[int]]
 
 type
