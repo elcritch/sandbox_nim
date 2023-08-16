@@ -5,6 +5,8 @@ import threading/smartptrs
 
 import events
 
+## Need to run `atlas replay` to use this one
+
 var threads: array[2,Thread[int]]
 
 var
