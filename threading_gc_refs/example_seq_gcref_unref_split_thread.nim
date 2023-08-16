@@ -52,6 +52,7 @@ proc thread1(val: int) {.thread.} =
 
     GC_fullCollect()
     os.sleep(100)
+    echo "thread1: finish"
     assert getFreedValue(shareDataIsFreed) == 1, "shareData should be freed by now"
     echo "thread1: done"
 
