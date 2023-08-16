@@ -66,15 +66,15 @@ proc thread2(val: int) {.thread.} =
     GC_ref(msg)
     echo "thread2: received: ", repr msg, "; shareData: ", cast[pointer](shareData).repr
 
-    echo "thread2: deref: "
-    GC_unref(msg)
-
     signal(event)
     wait(eventAfterGcFree)
     echo "thread2: after gc_collect: ", repr msg
     assert getFreedValue(shareDataIsFreed) == 1
 
+    echo "thread2: deref: "
+    GC_unref(msg)
     msg = nil
+
     signal(eventAfterGcFree)
     echo "thread2: done"
 
