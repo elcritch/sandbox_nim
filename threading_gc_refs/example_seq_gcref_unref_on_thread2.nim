@@ -36,7 +36,6 @@ proc thread1(val: int) {.thread.} =
     myBytes.data = 10
 
     shareData = myBytes
-    GC_ref(shareData)
     echo "thread1: sent, left over: ", repr myBytes
     signal(event)
 
@@ -50,7 +49,6 @@ proc thread1(val: int) {.thread.} =
     wait(eventAfterGcFree)
     echo "thread1: gc_unref and gc_collect"
 
-    GC_unref(shareData)
     shareData = nil
 
     GC_fullCollect()
@@ -65,14 +63,16 @@ proc thread2(val: int) {.thread.} =
     
     echo "thread2: receiving ", cast[pointer](shareData).repr
     var msg = shareData
+    GC_ref(msg)
     echo "thread2: received: ", repr msg, "; shareData: ", cast[pointer](shareData).repr
 
     echo "thread2: deref: "
+    GC_unref(msg)
 
     signal(event)
     wait(eventAfterGcFree)
     echo "thread2: after gc_collect: ", repr msg
-    assert getFreedValue(shareDataIsFreed) == 0
+    assert getFreedValue(shareDataIsFreed) == 1
 
     msg = nil
     signal(eventAfterGcFree)
