@@ -10,7 +10,7 @@ var threads: array[2,Thread[int]]
 
 var
   # create a channel to send/recv strings
-  shareVal: SharedPtr[int]
+  shareVal: SharedPtr[seq[char]]
   event: Event
 
 proc thread1(val: int) {.thread.} =

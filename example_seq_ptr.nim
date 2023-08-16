@@ -6,12 +6,24 @@ import std/atomics
 import events
 
 type
-  Buffer*[T] = object
+  Buffer*[T: object] = object
     cnt: ptr int
     buf: ptr UncheckedArray[T]
     size: int
 
 var threads: array[2,Thread[int]]
+
+proc doTaskPool()
+  doCompute(blkPtr[]) # --> thread b
+
+proc handleRequest*() {.async.} =
+  doSetup()
+  let blk: Block
+
+  let blkPtr = addr blk
+  await sendTaskPool(blkPtr)
+
+  return success Ok
 
 proc `$`*[T](data: Buffer[T]): string =
   if data.buf.isNil:
