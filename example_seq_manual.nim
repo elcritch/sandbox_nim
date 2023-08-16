@@ -11,8 +11,7 @@ type
     data: int
 
 var
-  # create a channel to send/recv strings
-  shareSeq: ptr Buffer
+  shared: ptr Buffer
   event: Event
 
 proc thread1(val: int) {.thread.} =
@@ -22,7 +21,7 @@ proc thread1(val: int) {.thread.} =
     var myBytes: ptr Buffer
     myBytes = cast[ptr Buffer](alloc0(sizeof(Buffer)))
     myBytes.data = 22
-    shareSeq = myBytes
+    shared = myBytes
     echo "thread1: sent, left over: ", repr myBytes
 
     signal(event)
@@ -35,8 +34,8 @@ proc thread2(val: int) {.thread.} =
   {.cast(gcsafe).}:
     wait(event)
     
-    echo "thread2: receiving ", cast[pointer](shareSeq).repr
-    let msg = shareSeq
+    echo "thread2: receiving ", cast[pointer](shared).repr
+    let msg = shared
     if msg != nil:
       echo "thread2: received: ", cast[pointer](msg).repr
       echo "thread2: received: ", msg.data
