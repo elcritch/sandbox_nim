@@ -12,12 +12,12 @@ type
     data: int
 
   TestScenario* = enum
-    GCRefNone
+    GCRefThreadNone
     GCRefThread1
     GCRefThread2
 
 var
-  scenario = GCRefNone
+  scenario = GCRefThread2
 
 var
   shareDataIsFreed: ptr int
