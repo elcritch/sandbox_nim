@@ -34,7 +34,7 @@ proc thread1(val: int) {.thread.} =
     echo "thread1: sent, left over: ", repr myBytes
     signal(event)
     wait(event)
-    # myBytes = nil
+    myBytes = nil
     echo "thread1: finishing: ", cast[pointer](myBytes).repr
 
     GC_fullCollect()
