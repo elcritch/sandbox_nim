@@ -27,7 +27,7 @@ proc thread1(val: int) {.thread.} =
     var myBytes: ref Buffer
     myBytes.new:
       proc (x: ref Buffer) =
-        echo "thread1: freeing: ", cast[pointer](x).repr
+        echo "thread1: Freeing: ", cast[pointer](x).repr
     myBytes.data = 10
     shareSeq = myBytes
     echo "thread1: sent, left over: ", repr myBytes
