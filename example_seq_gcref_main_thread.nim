@@ -12,14 +12,12 @@ type
     data: int
 
 var
-  shareDataIsFreed: ptr int
+  shareDataIsFreed: AtomicFreed
   shareData: ref Buffer
   event: Event
   eventAfterGcFree: Event
   eventAfterThread2Done: Event
 
-proc getFreedValue*(x: ptr int): int =
-  atomicLoad(x, addr result, ATOMIC_ACQUIRE)
 
 proc `=destroy`*(x: var Buffer) =
   echo "Buffer: destroy: ", cast[pointer](addr(x)).repr
@@ -33,7 +31,7 @@ proc thread1(val: int) {.thread.} =
     myBytes.new:
       proc (x: ref Buffer) =
         echo "thread1: FREEING: ", cast[pointer](x).repr
-        discard atomicAddFetch(shareDataIsFreed, 1, ATOMIC_ACQUIRE)
+        discard shareDataIsFreed.incrFreedValue()
     myBytes.data = 10
     GC_ref(myBytes)
     shareData = myBytes
@@ -81,7 +79,7 @@ proc main() =
 
   event = initEvent()
   eventAfterGcFree = initEvent()
-  shareDataIsFreed = cast[ptr int](alloc0(sizeof(int)))
+  shareDataIsFreed = newFreedValue()
   createThread(threads[0], thread1, 0)
   createThread(threads[1], thread2, 1)
 
