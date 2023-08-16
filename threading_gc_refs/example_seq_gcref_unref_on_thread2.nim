@@ -47,7 +47,7 @@ proc thread1(val: int) {.thread.} =
     signal(eventAfterGcFree)
 
     wait(eventAfterGcFree)
-    echo "thread1: gc_unref and gc_collect"
+    echo "thread1: post gc_collect"
 
     shareData = nil
 
