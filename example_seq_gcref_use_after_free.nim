@@ -28,7 +28,6 @@ proc thread1(val: int) {.thread.} =
     myBytes.new:
       proc (x: ref Buffer) =
         echo "thread1: freeing: ", cast[pointer](x).repr
-    # myBytes.new()
     myBytes.data = 10
     shareSeq = myBytes
     echo "thread1: sent, left over: ", repr myBytes
