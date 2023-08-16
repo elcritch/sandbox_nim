@@ -15,6 +15,9 @@ var
   shareSeq: ref Buffer
   event: Event
 
+proc `=destroy`*(x: var Buffer) =
+  echo "Buffer: destroy: ", cast[pointer](addr(x)).repr
+
 proc thread1(val: int) {.thread.} =
   echo "thread1: sending"
   {.cast(gcsafe).}:
@@ -22,18 +25,20 @@ proc thread1(val: int) {.thread.} =
 
     block:
       var myBytes: ref Buffer
-      myBytes.new(proc (x: ref Buffer) = echo "free!")
+      myBytes.new()
       myBytes.data = 10
-      GC_ref(myBytes)
+      # GC_ref(myBytes)
       # GC_unref(myBytes)
-      shareSeq = myBytes
+      # shareSeq = myBytes
       echo "thread1: sent, left over: ", repr myBytes
-
       signal(event)
       wait(event)
+      # GC_unref(myBytes)
+      myBytes = nil
+      echo "thread1: finishing: ", cast[pointer](myBytes).repr
     
     GC_fullCollect()
-    os.sleep(1000)
+    os.sleep(100)
 
 proc thread2(val: int) {.thread.} =
   echo "thread2: wait"
@@ -41,13 +46,14 @@ proc thread2(val: int) {.thread.} =
     wait(event)
     
     echo "thread2: receiving ", cast[pointer](shareSeq).repr
-    let msg = move shareSeq
+    var msg = move shareSeq
     echo "thread2: shared moved: ", cast[pointer](shareSeq).repr
     # GC_ref(msg)
     if msg != nil:
       echo "thread2: received: ", repr msg
     echo "thread2: deref: "
-    GC_unref(msg)
+    # GC_unref(msg)
+    msg = nil
     signal(event)
     echo "thread2: done: "
 
