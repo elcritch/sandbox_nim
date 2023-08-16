@@ -2,7 +2,21 @@
 import std/os
 import std/locks
 
-import events
+type
+  Event* = tuple[cond: Cond, lock: Lock]
+
+proc initEvent*(): Event =
+  result.lock.initLock()
+  result.cond.initCond()
+
+template signal*(evt: var Event) =
+  withLock(evt.lock):
+    signal(evt.cond)
+
+template wait*(evt: var Event) =
+  withLock(evt.lock):
+    wait(evt.cond, evt.lock)
+
 
 when defined(gcArc) or defined(gcOrc):
   {.error: "this example only blows up with refc".}
@@ -26,23 +40,28 @@ proc thread1(val: int) {.thread.} =
     myBytes.data = 22
     shared = myBytes
     echo "thread1: sent, left over: ", repr myBytes
+
     signal(event)
     echo "thread1: wait"
+
     wait(event)
     echo "thread1: free: ", repr myBytes.data
 
 proc thread2(val: int) {.thread.} =
   echo "thread2: wait"
   {.cast(gcsafe).}:
+
     wait(event)
     echo "thread2: receiving: ", cast[pointer](shared).repr
     let msg = shared
     echo "thread2: received: ", cast[pointer](msg).repr
+
     if msg != nil:
       echo "thread2: received: ", msg.data
       dealloc(msg)
-    echo "thread2: done: ", cast[pointer](msg).repr
+
     signal(event)
+    echo "thread2: done: ", cast[pointer](msg).repr
 
 proc main() =
   echo "running"
