@@ -1,0 +1,19 @@
+{
+  "items": {
+    "threading": {
+      "dir": "../deps/threading",
+      "url": "https://github.com/nim-lang/threading",
+      "commit": "148b0dad5898e4d773c6fc6a32b99679f5ea6829"
+    }
+  },
+  "nimcfg": "############# begin Atlas config section ##########\n--noNimblePath\n--path:\"../deps/threading\"\n############# end Atlas config section   ##########\n",
+  "nimbleFile": {
+    "filename": "threading_gc_refs.nimble",
+    "content": "requires \"threading\"\n"
+  },
+  "hostOS": "macosx",
+  "hostCPU": "arm64",
+  "nimVersion": "1.6.14",
+  "gccVersion": "",
+  "clangVersion": ""
+}
