@@ -12,7 +12,7 @@ type
 
 var
   # create a channel to send/recv strings
-  shareSeq: ref Buffer
+  shareData: ref Buffer
   event: Event
   eventAfterGcFree: Event
 
@@ -29,7 +29,7 @@ proc thread1(val: int) {.thread.} =
       proc (x: ref Buffer) =
         echo "thread1: FREEING: ", cast[pointer](x).repr
     myBytes.data = 10
-    shareSeq = myBytes
+    shareData = myBytes
     echo "thread1: sent, left over: ", repr myBytes
     signal(event)
     wait(event)
@@ -45,10 +45,10 @@ proc thread2(val: int) {.thread.} =
   {.cast(gcsafe).}:
     wait(event)
     
-    echo "thread2: receiving ", cast[pointer](shareSeq).repr
-    var msg = shareSeq
-    shareSeq = nil
-    echo "thread2: shared moved: ", cast[pointer](shareSeq).repr
+    echo "thread2: receiving ", cast[pointer](shareData).repr
+    var msg = shareData
+    shareData = nil
+    echo "thread2: shared moved: ", cast[pointer](shareData).repr
     if msg != nil:
       echo "thread2: received: ", repr msg
     signal(event)

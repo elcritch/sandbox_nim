@@ -8,7 +8,7 @@ var threads: array[2,Thread[int]]
 
 var
   # create a channel to send/recv strings
-  shareSeq: string
+  shareData: string
   event: Event
 
 proc thread1(val: int) {.thread.} =
@@ -16,7 +16,7 @@ proc thread1(val: int) {.thread.} =
   {.cast(gcsafe).}:
     os.sleep(100)
     var myBytes = "Hello"
-    shareSeq = move myBytes
+    shareData = move myBytes
     echo "thread1: sent, left over: ", myBytes
     signal(event)
 
@@ -25,7 +25,7 @@ proc thread2(val: int) {.thread.} =
   {.cast(gcsafe).}:
     wait(event)
     echo "thread2: receiving "
-    let msg = shareSeq
+    let msg = shareData
     echo "thread2: received: " & msg
 
 proc main() =

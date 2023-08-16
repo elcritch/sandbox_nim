@@ -16,11 +16,8 @@ type
     GCRefThread2
 
 var
-  scenario = GCRefThread1
-
-var
-  # create a channel to send/recv strings
-  shareSeq: ref Buffer
+  scenario = GCRefThread2
+  shareData: ref Buffer
   event: Event
   eventAfterGcFree: Event
 
@@ -39,7 +36,7 @@ proc thread1(val: int) {.thread.} =
     myBytes.data = 10
     if scenario == GCRefThread1:
       GC_ref(myBytes)
-    shareSeq = myBytes
+    shareData = myBytes
     echo "thread1: sent, left over: ", repr myBytes
     signal(event)
     wait(event)
@@ -55,8 +52,8 @@ proc thread2(val: int) {.thread.} =
   {.cast(gcsafe).}:
     wait(event)
     
-    echo "thread2: receiving ", cast[pointer](shareSeq).repr
-    var msg = move shareSeq
+    echo "thread2: receiving ", cast[pointer](shareData).repr
+    var msg = move shareData
     if scenario == GCRefThread2:
       GC_ref(msg)
     echo "thread2: received: ", repr msg
