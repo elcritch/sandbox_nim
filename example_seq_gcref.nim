@@ -12,14 +12,21 @@ type
     data: int
 
   TestScenario* = enum
+    GCRefNone
     GCRefThread1
     GCRefThread2
 
 var
-  scenario = GCRefThread2
+  scenario = GCRefNone
+
+var
+  shareDataIsFreed: ptr int
   shareData: ref Buffer
   event: Event
   eventAfterGcFree: Event
+
+proc getFreedValue*(x: ptr int): int =
+  atomicLoad(x, addr result, ATOMIC_ACQUIRE)
 
 proc `=destroy`*(x: var Buffer) =
   echo "Buffer: destroy: ", cast[pointer](addr(x)).repr
@@ -33,6 +40,7 @@ proc thread1(val: int) {.thread.} =
     myBytes.new:
       proc (x: ref Buffer) =
         echo "thread1: FREEING: ", cast[pointer](x).repr
+        discard atomicAddFetch(shareDataIsFreed, 1, ATOMIC_ACQUIRE)
     myBytes.data = 10
     if scenario == GCRefThread1:
       GC_ref(myBytes)
@@ -45,7 +53,12 @@ proc thread1(val: int) {.thread.} =
 
     GC_fullCollect()
     signal(eventAfterGcFree)
+    wait(eventAfterGcFree)
+    echo "thread1: gc_collect"
+    GC_fullCollect()
     os.sleep(100)
+    assert getFreedValue(shareDataIsFreed) == 1, "myBytes should be freed by now"
+    echo "thread1: done"
 
 proc thread2(val: int) {.thread.} =
   echo "thread2: wait"
@@ -56,22 +69,29 @@ proc thread2(val: int) {.thread.} =
     var msg = move shareData
     if scenario == GCRefThread2:
       GC_ref(msg)
-    echo "thread2: received: ", repr msg
+    echo "thread2: received: ", repr msg, "; shareData: ", cast[pointer](shareData).repr
 
     echo "thread2: deref: "
-    # msg = nil
-    GC_unref(msg)
 
     signal(event)
     wait(eventAfterGcFree)
     echo "thread2: after gc_collect: ", repr msg
-    echo "thread2: done: "
+    assert getFreedValue(shareDataIsFreed) == 0
+
+    echo "thread2: gc_unref"
+    msg = nil
+    if scenario in [GCRefThread1, GCRefThread2]:
+      GC_unref(msg)
+
+    signal(eventAfterGcFree)
+    echo "thread2: done"
 
 proc main() =
   echo "running"
 
   event = initEvent()
   eventAfterGcFree = initEvent()
+  shareDataIsFreed = cast[ptr int](alloc0(sizeof(int)))
   createThread(threads[0], thread1, 0)
   createThread(threads[1], thread2, 1)
 
