@@ -2,28 +2,6 @@
 import std/os
 import std/locks
 
-#[
-  Example output:
-
-  running
-  thread1: sending
-  thread2: wait
-  thread1: sent, left over: ptr 0x100c53050 --> [data = 22]
-  thread1: wait
-  thread2: receiving: 0x100c53050
-  thread2: received: 0x100c53050
-  thread2: received: 22
-  thread2: freeing: 0x1045ab050
-  Traceback (most recent call last)
-  /Users/jaremycreechley/projs/status/sandbox/example_seq_manual.nim(60) thread2
-  /Users/jaremycreechley/.asdf/installs/nim/1.6.14/lib/system/alloc.nim(918) dealloc
-  /Users/jaremycreechley/.asdf/installs/nim/1.6.14/lib/system/alloc.nim(806) rawDealloc
-  /Users/jaremycreechley/.asdf/installs/nim/1.6.14/lib/system/alloc.nim(523) listRemove
-  SIGSEGV: Illegal storage access. (Attempt to read from nil?)
-  Error: execution of an external program failed: '/Users/jaremycreechley/projs/status/sandbox/example_seq_manual '
-
-]#
-
 type
   Event* = tuple[cond: Cond, lock: Lock]
 
